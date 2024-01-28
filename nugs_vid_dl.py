@@ -22,10 +22,7 @@ global driver
 global logged_into_nugs_headless
 global headless_driver
 global headless_driver_initialized
-import os
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
+
 
 # Global variables (Refactor and manage)
 video_directory = None
@@ -76,11 +73,6 @@ def get_local_paths():
 
 
 def get_valid_path(network_path, local_path):
-    """
-    Returns a valid path.
-    If the network path exists, returns it. Otherwise, ensures the local path exists (creating directories if needed)
-    and returns the local path.
-    """
     if os.path.exists(network_path):
         return network_path
     else:
@@ -88,7 +80,7 @@ def get_valid_path(network_path, local_path):
         return local_path
 
 def update_json_config(nugs_config):
-    config_file_path = 'binaries/Nugs-Downloader-main/config.json'
+    config_file_path = 'binaries/config.json'
     if not os.path.exists(config_file_path):
         print(f"Config file not found: {config_file_path}")
         return
@@ -224,7 +216,7 @@ def click_load_more_button(driver):
         )
         load_more_button.click()
     except TimeoutException:
-        print("clicked 'Load More' button. parsing...")
+        print("clicked 'Load More' button. parsing...\n")
         return False
     return True
 
@@ -249,11 +241,11 @@ def scrape_single_release_or_exclusive(driver, url, combined_folder_names_set, a
         if "/release/" in url: 
             exclusive_tag=False
             save_link =url # f'https://play.nugs.net/release/{release_number}'                    
-            print(f'save_link: {save_link}')
+            # print(f'save_link: {save_link}')
         if "/exclusive/" in url:
             exclusive_tag=True
             save_link_exclusive =url # f'https://play.nugs.net/watch/livestreams/exclusive/{release_number}'
-            print(f'save_link_exclusive: {save_link_exclusive}')
+            # print(f'save_link_exclusive: {save_link_exclusive}')
         save_link =url
         WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CLASS_NAME, "_cover_ex3y9_35")))
         page_source = driver.page_source
@@ -358,7 +350,7 @@ def scrape_single_release_or_exclusive(driver, url, combined_folder_names_set, a
             f.write(f"{save_link_exclusive if exclusive_tag else save_link}\n{formatted_setlist}")
     
         # Assuming normalized_display_text, normalized_folder_names, and folder_names_set are already defined
-        print(f'display_text.strip(): {display_text.strip()}')
+        # print(f'display_text.strip(): {display_text.strip()}')
         # Process the folder names and populate normalized_folder_names
         normalized_folder_names = {process_filename(name.strip()) for name in combined_folder_names_set}
         # Folder existence check and download decision
@@ -379,7 +371,7 @@ def scrape_single_release_or_exclusive(driver, url, combined_folder_names_set, a
     # Logic to scrape details from the single release or excl
 def scrape_for_release_links(driver,video_directory,combined_folder_names_set,args):
     url = driver.current_url
-    print(f'url_in_scrape: {url}')
+    # print(f'url_in_scrape: {url}')
     # Check if the URL is for a single release or exclusive
     if "/release/" in url or "/exclusive/" in url:
         scrape_single_release_or_exclusive(driver, url,combined_folder_names_set,args)  # New function to handle single link scraping
@@ -491,7 +483,7 @@ def scrape_for_release_links(driver,video_directory,combined_folder_names_set,ar
                     date_obj = datetime.strptime(date, '%b %d, %Y')
                     formatted_date=date_obj.strftime('%Y-%m-%d')
                     display_text = f"{band} {formatted_date} {venue}, {location}"
-                    print(display_text)
+                    # print(display_text)
         
                 elif "/exclusive/" in card['href']:
                     exclusive_tag=True
@@ -515,12 +507,12 @@ def scrape_for_release_links(driver,video_directory,combined_folder_names_set,ar
                         date=date_final
     
                     display_text = format_exclusive_details(artist, details, date) 
-                    print(display_text)
+                    # print(display_text)
                 if display_text.strip() in folder_names_set:
                     continue
                 # Construct the save link
                 save_link = f'https://play.nugs.net/release/{release_number}'
-                print(f"save_link: {save_link}")
+                # print(f"save_link: {save_link}")
                 driver.get(save_link)
                 WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, 'body')))
                 page_source = driver.page_source        
@@ -552,10 +544,11 @@ def scrape_for_release_links(driver,video_directory,combined_folder_names_set,ar
                         file.write(response.content)
     
                 formatted_setlist, song_names, song_counter = parse_html_for_setlist(page_source)
-                print(formatted_setlist)
+                
                 info_txt_path = os.path.join(data_directory, display_text.strip(), f"{display_text.strip()}.txt")
                 # Assuming normalized_display_text, normalized_folder_names, and folder_names_set are already defined
-                print(f'\nfilename to process: {display_text.strip()}')
+                print(f'\nfilename to process: {display_text.strip()}\n')
+                print(formatted_setlist)
                 # Process the folder names and populate normalized_folder_names
                 normalized_folder_names = {process_filename(name.strip()) for name in combined_folder_names_set}
                 # Folder existence check and download decision
@@ -563,7 +556,8 @@ def scrape_for_release_links(driver,video_directory,combined_folder_names_set,ar
                 # print(f'normalized_folder_names: {normalized_folder_names}')
                 # print(f'normalized_display_text: {normalized_display_text}')
                 if normalized_display_text in normalized_folder_names:
-                    print(f"Folder already exists: {normalized_display_text}")
+                    print(f"filname is in <processed_filenames.txt> skipping: {normalized_display_text}")
+
                 else:
                     # Folder does not exist, proceed with download
                     if exclusive_tag:
@@ -654,7 +648,7 @@ def login_to_nugs(driver, nugs_email, nugs_password):
     login_button = driver.find_element(By.CSS_SELECTOR, 'button.btn.btn-block.btn-primary')
     login_button.click()
     WebDriverWait(driver, 20).until(EC.url_changes('https://id.nugs.net/account/login'))
-    print('Logged in successfully.')
+    print('\n\nlogged in successfully\n')
     return driver
 
 def navigate_to_page(driver, page):
@@ -664,7 +658,7 @@ def navigate_to_page(driver, page):
         'videos': 'https://play.nugs.net/watch/videos/recent'
     }
     target_url = urls.get(page, page)  # Use the provided page URL if not in predefined list
-    print(f'Navigating to {target_url}...')
+    print(f'\nNavigating to {target_url}...\n')
     driver.get(target_url)
     try:
         # Wait for specific elements indicating page load completion
@@ -681,15 +675,97 @@ def navigate_to_page(driver, page):
         print(f'Unexpected error: {e}')
     return driver
 
+
+
+# def run_nugs_downloader(release_link, video_save_path, video_dl_base_url):
+#     print("Starting nugs-downloader...")
+#     match = re.search(r'/(\d+)$', release_link)
+#     numbers = match.group(1) if match else None
+
+#     if numbers:
+#         video_dl_link = video_dl_base_url + numbers
+
+#         # Convert the path to Unix-style
+#         unix_style_video_save_path = video_save_path.replace('\\', '/')
+
+#         # Set the working directory to the nugs-downloader's directory
+#         working_dir = 'binaries/'
+        
+#         # Construct the command to run the nugs_downloader executable
+#         command = f'./main structs.go -o "{unix_style_video_save_path}" {video_dl_link}'
+
+#         # Use the working directory in subprocess
+#         with subprocess.Popen(command, cwd=working_dir, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as proc:
+#             last_percentage = None
+#             for line in proc.stdout:
+#                 match = re.search(r'(\d+)%', line)
+#                 if match:
+#                     current_percentage = match.group(1)
+#                     if current_percentage != last_percentage:
+#                         print(f"{current_percentage}% complete", end='\r', flush=True)
+#                         last_percentage = current_percentage
+#                 else:
+#                     # Printing the remaining stdout line only if it's not a percentage update
+#                     print(f"STDOUT: {line.strip()}", end='\r')
+#             for line in proc.stderr:
+#                 print(f"STDERR: {line.strip()}")
+#     else:
+#         print("Invalid release link provided.")
+
+#     print("\nrun_nugs_downloader completed.")
 def run_go_program(release_link, video_save_path, video_dl_base_url):
+    print("starting nugs-downloader...")
     match = re.search(r'/(\d+)$', release_link)
     numbers = match.group(1) if match else None
+
     if numbers:
         video_dl_link = video_dl_base_url + numbers
-        command = f'cd binaries/Nugs-Downloader-main; go run main.go structs.go -o "{video_save_path}" "{video_dl_link}"'
-        powershell_command = ['powershell', '-Command', command]
-        last_percentage = None
-        with subprocess.Popen(powershell_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as proc:
+        # print(f"Video download link: {video_dl_link}")
+
+        # Convert the path to Unix-style
+        unix_style_video_save_path = video_save_path.replace('\\', '/')
+        # print(f"Unix-style video save path: {unix_style_video_save_path}")
+
+
+
+
+
+        # Set the working directory to the nugs-downloader's directory
+        working_dir = 'binaries/'
+        
+        # Construct the command to run the nugs_downloader executable
+        command = f'main.exe -o "{unix_style_video_save_path}" {video_dl_link}'
+
+        print(f"Command to be executed: {command}")
+
+        
+
+
+
+
+        # # Set the working directory to the Go program's directory
+        # working_dir = 'binaries/Nugs-Downloader-main'
+        # # print(f"Working directory: {working_dir}")
+
+        # # Construct the command to run the Go program
+        # command = f'go run main.go structs.go -o "{unix_style_video_save_path}" {video_dl_link}'
+        # # print(f"Command to be executed: {command}")
+
+
+
+
+
+
+
+
+
+
+
+
+
+        # Use the working directory in subprocess
+        with subprocess.Popen(command, cwd=working_dir, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as proc:
+            last_percentage = None
             for line in proc.stdout:
                 match = re.search(r'(\d+)%', line)
                 if match:
@@ -698,11 +774,14 @@ def run_go_program(release_link, video_save_path, video_dl_base_url):
                         print(f"{current_percentage}% complete", end='\r', flush=True)
                         last_percentage = current_percentage
                 else:
-                    print(line.strip())
+                    # Printing the remaining stdout line only if it's not a percentage update
+                    print(f"STDOUT: {line.strip()}", end='\r')
             for line in proc.stderr:
-                print(f"Error: {line.strip()}")
+                print(f"STDERR: {line.strip()}")
     else:
         print("Invalid release link provided.")
+
+    print("\nrun_go_program completed.")
 
 def perform_download(link,video_directory , args, exclusive=False):
     target_drive=video_directory
@@ -725,12 +804,29 @@ def perform_download(link,video_directory , args, exclusive=False):
             return
 
         latest_file = files[0]
+        
+        
+        
+        
+        latest_file=convert_to_mkv(latest_file)
+        
+        
+        
+        
         latest_filename = os.path.basename(latest_file)
         latest_filename = sanitize_name_colon(latest_filename)  # Ensure sanitize_name_colon is defined
 
         last_underscore_index = latest_filename.rfind('_')
         suffix = latest_filename[last_underscore_index + 1:]
         new_folder_name = f"{folder_name} {suffix}"
+        
+        
+        
+        
+        
+        
+        
+        
         new_file_path = os.path.join(video_directory, new_folder_name)
         
         with open('processed_filenames.txt', 'a') as file:
@@ -750,7 +846,17 @@ def perform_download(link,video_directory , args, exclusive=False):
         #     subprocess.run(command, check=True)
         # except subprocess.CalledProcessError as e:
         #     print(f"An error occurred during file upload: {e}")
-
+def convert_to_mkv(filename):
+    """
+    Convert the given file to .mkv format using FFmpeg, if it's not already in that format.
+    """
+    if not filename.endswith('.mkv'):
+        # Construct the FFmpeg command to convert the file to .mkv
+        new_filename = filename.rsplit('.', 1)[0] + '.mkv'
+        ffmpeg_convert_command = ['ffmpeg', '-i', filename, '-c', 'copy', new_filename]
+        subprocess.run(ffmpeg_convert_command)
+        return new_filename
+    return filename
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Automated video downloader for Nugs.net.')
     parser.add_argument('--page-url', 
