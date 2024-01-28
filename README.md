@@ -38,3 +38,6 @@ argument "--page-url" [URL]
 "livestreams" - get all exclusive
 
 or link to specific release
+
+
+if it gives selenium erros try just running it again
