@@ -1,22 +1,30 @@
-# ngs_vid_dl
+# nugs_vid_dl
 
 OVERVIEW:
 
-auto dl recent vids and renames files into a standard format and packages as mkv maintianing chapters and other metadata if present
+this is just a fancy wrapper for https://github.com/Sorrow446/Nugs-Downloader
 
-it also saves a copy of the html source and the setlist (if present) to a folder in the script_data_directory
+-auto finds and dl recently available livestreams and videos (or whatever you link to ex. artist page or single vid)
+
+-copys the .ts file into mkv (chapters and other metadata maintained if present)
+
+-renames files into a standard format:
+    artist date(yyyy-mm-dd) venue, location resolution
+
+-saves some data to a script_data_directory namely:
+    a copy of the html source
+ 	the setlist (if present)
+    the cover image.jpg
+	
 
 
 
 SETUP:
 
-you need to put a username and pasword into the config ini
+the only necessary step is to put a username and pasword for nugs into the config ini. (the free trial works)
 
-thats the only necessary change, all the rest of the settings can be let as is (or changed)
 
 if you leave the paths blank it will creat folders in the directory from which the script is run. there are examples of paths in the examples folder.
-
-the processed_files.txt keeps track of what files have been processed to avoid duplication, the script also adds and videos in the video folder path to the list to skip. you can choose whether or not to use this by placing the processed_text file in the root, or not.
 
 update chrome
 
@@ -25,19 +33,43 @@ if chromedriver isnt matchign get them here, chrome binary and chromedriver.exe 
 https://googlechromelabs.github.io/chrome-for-testing/#stable
 
 
+
+
 USE:
+you can just run the script, or pass:
 
-just running the script will loop through all recent/exclusive
+    "--page-url" [URL]
 
-argument "--page-url" [URL]
+[URL] passed can be:
 
-[URL] Can be:
+    - "watch" - download vids from 'https://play.nugs.net/watch/videos/recent'
 
-"videos"  - get all recent 
+    - "exclusive" - download vids from 'https://play.nugs.net/watch/livestreams/recent'
 
-"livestreams" - get all exclusive
+    - any single release ex:
+        - https://play.nugs.net/watch/livestreams/exclusive/35973
+        - https://play.nugs.net/watch/release/33516
 
-or link to specific release
+    - an artist page with 'browse' subbed for 'watch' will download all vids form that artist ex:
+        - instead of https://play.nugs.net/browse/artist/128
+        - use https://play.nugs.net/browse/artist/128
 
+    - blank (no arg passed) does both "watch" and "exclusive"
+
+example use:
+
+nugs_vid_dl --page-url watch
+
+
+
+NOTES:
+the processed_files.txt keeps track of what files have been processed to avoid duplication, the script also adds and videos in the video folder path to the list to skip. you can choose whether or not to use this by placing the processed_text file in the root, or not.
 
 if it gives selenium erros try just running it again
+
+exclusive fimenames are messed up sometimes. nugs has no naming convention for the shows they put up as replays
+
+
+
+
+use approperiatly with regards to your account
