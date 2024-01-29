@@ -46,9 +46,10 @@ you can just run the script, or pass:
 
     - "exclusive" - download vids from 'https://play.nugs.net/watch/livestreams/recent'
 
-    - any single release ex:
+    - any single release (or a list) ex:
         - https://play.nugs.net/watch/livestreams/exclusive/35973
         - https://play.nugs.net/watch/release/33516
+	- https://play.nugs.net/watch/release/33516 https://play.nugs.net/watch/livestreams/exclusive/35973
 
     - an artist page with 'browse' subbed for 'watch' will download all vids form that artist ex:
         - instead of https://play.nugs.net/browse/artist/128
