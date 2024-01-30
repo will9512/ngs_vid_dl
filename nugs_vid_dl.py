@@ -571,6 +571,24 @@ def parse_arguments():
     parser.add_argument('--upload', action='store_true', help='Enable upload functionality for the downloaded video.')
     return parser.parse_args()
 
+
+def validate_url(url, valid_choices):
+    """
+    Validates the given URL against a set of valid choices and general URL format.
+    
+    :param url: URL to validate
+    :param valid_choices: List of predefined valid choices
+    :return: Tuple (bool, str) indicating whether the URL is valid and an error message if not
+    """
+    if url in valid_choices:
+        return True, ""  # URL is a valid choice
+
+    parsed_url = urlparse(url)
+    if all([parsed_url.scheme, parsed_url.netloc]):
+        return True, ""  # URL has a valid format
+
+    return False, f"Invalid URL provided: {url}"
+
 def main():
     print("\n**starting script**")
     nugs_email, nugs_password, video_directory = load_credentials()
@@ -579,23 +597,18 @@ def main():
     folder_names_set_from_file = process_filenames_from_file('processed_filenames.txt')
     folder_names_set_from_dir = initialize_folder_names_set(video_directory)
     combined_folder_names_set = folder_names_set_from_dir.union(folder_names_set_from_file)
-    # Display combined folder names for verification
+
     print("\npotentially skipping the following (form processed.txt):")
     for name in sorted(combined_folder_names_set):
         print(name)
-        
+
     valid_choices = ['watch', 'exclusive']
     for page_url in args.page_url:
-        # Check if the URL is one of the valid choices
-        if page_url in valid_choices:
-            pages_to_scrape.append(page_url)
-        else:
-            # Validate the URL format for other URLs
-            parsed_url = urlparse(page_url)
-            if all([parsed_url.scheme, parsed_url.netloc]):
-                pages_to_scrape.append(page_url)
-            else:
-                print(f"Invalid URL provided: {page_url}")
+        is_valid, error_msg = validate_url(page_url, valid_choices)
+        if not is_valid:
+            print(error_msg)
+            continue  # Skip to the next URL
+        pages_to_scrape.append(page_url)
 
     if not pages_to_scrape:
         print("No valid URLs provided. Exiting.")
@@ -603,23 +616,15 @@ def main():
 
     print(f'Pages to scrape: {pages_to_scrape}')
     for page in pages_to_scrape:
-        # Validate each URL in the list
-        parsed_url = urlparse(page)
-        if not all([parsed_url.scheme, parsed_url.netloc]):
-            print(f"Invalid URL provided: {page}")
-            continue  # Skip to the next URL
-
-        # Assuming you have defined setup_headless_driver, login_to_nugs, etc.
         driver = setup_headless_driver()
         driver = login_to_nugs(driver, nugs_email, nugs_password)
-        driver = navigate_to_page(driver, page)  # Navigate to each page
+        driver = navigate_to_page(driver, page)
         scrape_release_info(driver, video_directory, combined_folder_names_set, args)
 
-    
-    
+
+
 if __name__ == '__main__':
     main()
-
 
 
 
